@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>高尔夫智能分析系统 - 巧克力</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.7/chart.umd.min.js"></script>
+<style>
+/* ========== CSS Reset & Base ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #1B5E20;
+  --primary-light: #2E7D32;
+  --primary-dark: #0D4715;
+  --accent: #FF8F00;
+  --accent-light: #FFB74D;
+  --bg: #F5F5F5;
+  --card: #FFFFFF;
+  --text: #212121;
+  --text-secondary: #757575;
+  --border: #E0E0E0;
+  --success: #2E7D32;
+  --warning: #F57F17;
+  --danger: #C62828;
+  --danger-light: #FFCDD2;
+  --info: #1565C0;
+  --radius: 12px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+html { font-size: 16px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+/* ========== Header ========== */
+.header {
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: white;
+  padding: 16px 20px 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+.header p { font-size: 0.8rem; opacity: 0.8; margin-top: 2px; }
+
+/* ========== Tab Navigation ========== */
+.tab-nav {
+  display: flex;
+  background: var(--primary);
+  position: sticky;
+  top: 56px;
+  z-index: 99;
+}
+.tab-nav button {
+  flex: 1;
+  padding: 10px 4px;
+  border: none;
+  background: none;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+}
+.tab-nav button.active {
+  color: white;
+  border-bottom-color: var(--accent);
+  background: rgba(255,255,255,0.08);
+}
+.tab-nav button:hover { background: rgba(255,255,255,0.05); }
+
+/* ========== Main Content ========== */
+.tab-content { display: none; padding: 16px; max-width: 800px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+/* ========== Cards ========== */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title .icon { font-size: 1.2rem; }
+
+/* ========== Tooltip ========== */
+.tooltip-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  background: var(--info);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: help;
+  position: relative;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.tooltip-info::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 400;
+  white-space: nowrap;
+  max-width: 280px;
+  white-space: normal;
+  line-height: 1.4;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.tooltip-info::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #333;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+.tooltip-info:hover::after,
+.tooltip-info:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ========== Buttons ========== */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-accent { background: var(--accent); color: white; }
+.btn-accent:hover { background: var(--accent-light); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-outline {
+  background: white;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+}
+.btn-block { display: block; width: 100%; }
+.btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+/* ========== Stats Grid ========== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.stat-item {
+  background: linear-gradient(135deg, #E8F5E9, #F1F8E9);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.stat-item.warning { background: linear-gradient(135deg, #FFF8E1, #FFFDE7); }
+.stat-item.warning .stat-value { color: var(--accent); }
+.stat-item.danger { background: linear-gradient(135deg, #FFEBEE, #FFF3F0); }
+.stat-item.danger .stat-value { color: var(--danger); }
+
+/* ========== Hole Input Table ========== */
+.hole-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.hole-table th, .hole-table td {
+  padding: 8px 4px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.hole-table th {
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+.hole-table tr:nth-child(even) { background: #FAFAFA; }
+.hole-table tr:hover { background: #E8F5E9; }
+
+.hole-num { font-weight: 700; color: var(--primary); }
+
+/* ========== Input Controls ========== */
+.inline-select {
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  background: white;
+  cursor: pointer;
+  text-align: center;
+}
+.inline-input {
+  width: 50px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ========== Analysis Section ========== */
+.analysis-section { margin-bottom: 20px; }
+.analysis-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--primary-light);
+}
+.priority-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-right: 8px;
+}
+.priority-1 { background: #FFEBEE; color: var(--danger); }
+.priority-2 { background: #FFF8E1; color: #E65100; }
+.priority-3 { background: #E8F5E9; color: var(--success); }
+
+.analysis-card {
+  background: white;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border-left: 4px solid var(--primary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.analysis-card h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+.analysis-card p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.practice-tip {
+  background: #F1F8E9;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  color: var(--primary-dark);
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+/* ========== Benchmark Comparison ========== */
+.benchmark-bar {
+  height: 24px;
+  border-radius: 12px;
+  background: #E0E0E0;
+  margin: 8px 0;
+  position: relative;
+  overflow: hidden;
+}
+.benchmark-fill {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 0.5s;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  font-size: 0.7rem;
+  color: white;
+  font-weight: 700;
+}
+.benchmark-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+/* ========== History List ========== */
+.history-item {
+  background: white;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.history-item:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+.history-date { font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+.history-score { font-size: 1.3rem; font-weight: 800; color: var(--text); }
+.history-meta { font-size: 0.78rem; color: var(--text-secondary); margin-top: 4px; }
+
+/* ========== Chart Placeholder ========== */
+.chart-container {
+  width: 100%;
+  height: 250px;
+  background: #FAFAFA;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* ========== Quick Entry ========== */
+.quick-entry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.quick-hole-card {
+  background: white;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 2px solid transparent;
+}
+.quick-hole-card:hover { border-color: var(--primary-light); }
+.quick-hole-card.done { border-color: var(--success); background: #F1F8E9; }
+.quick-hole-num { font-weight: 800; color: var(--primary); font-size: 1.1rem; }
+.quick-hole-par { font-size: 0.75rem; color: var(--text-secondary); }
+
+/* ========== Modal ========== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: var(--primary); }
+
+/* ========== Form Elements ========== */
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.form-select, .form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: white;
+}
+.form-select:focus, .form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ========== Toggle Switch ========== */
+.toggle-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.toggle-btn {
+  padding: 8px 16px;
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  background: white;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+.toggle-btn.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+/* ========== Responsive - Tablet (481px - 768px) ========== */
+@media (min-width: 481px) and (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .stat-value { font-size: 1.6rem; }
+  .quick-entry-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .modal { max-width: 420px; }
+  .tab-content { padding: 16px; }
+  .card { padding: 14px; }
+}
+
+/* ========== Responsive - Desktop (>768px) ========== */
+@media (min-width: 769px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .stat-value { font-size: 2rem; }
+  .stat-item { padding: 18px; }
+  .quick-entry-grid { grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .modal { max-width: 440px; padding: 24px; }
+  .tab-content { padding: 24px; }
+  .card { padding: 20px; }
+  .hole-table { font-size: 0.85rem; }
+}
+
+/* ========== Responsive - Mobile (<=480px) ========== */
+@media (max-width: 480px) {
+  /* 全局 */
+  .tab-content { padding: 12px; }
+  .card { padding: 12px; margin-bottom: 12px; }
+  
+  /* Tab导航 */
+  .tab-nav button { font-size: 0.68rem; padding: 10px 2px; }
+  
+  /* 统计卡片 */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-value { font-size: 1.5rem; }
+  .stat-item { padding: 10px; }
+  .stat-label { font-size: 0.68rem; }
+  
+  /* 逐洞录入卡片 */
+  .quick-entry-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .quick-hole-card { padding: 10px; }
+  .quick-hole-num { font-size: 1rem; }
+  .quick-hole-par { font-size: 0.7rem; }
+  
+  /* 弹窗 - 移动端全屏优化 */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px;
+    margin: 0;
+  }
+  .modal h3 { font-size: 1.1rem; margin-bottom: 14px; }
+  .modal .form-group { margin-bottom: 12px; }
+  .modal .form-label { font-size: 0.85rem; }
+  
+  /* 表单控件 - 移动端优化 */
+  .form-input, .form-select { font-size: 16px; padding: 14px 12px; } /* 16px防止iOS缩放 */
+  .toggle-btn { padding: 12px 8px; font-size: 0.78rem; min-height: 44px; }
+  
+  /* 按钮 */
+  .btn { padding: 14px 16px; font-size: 1rem; min-height: 48px; }
+  
+  /* 表格 - 横向滚动 */
+  .hole-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .hole-table { font-size: 0.75rem; min-width: 500px; }
+  .hole-table th, .hole-table td { padding: 8px 4px; }
+  
+  /* 分析区块 */
+  .analysis-card { padding: 12px; }
+  .analysis-card h4 { font-size: 0.9rem; }
+  .analysis-card p { font-size: 0.82rem; }
+  .practice-tip { font-size: 0.78rem; padding: 10px; }
+  
+  /* PGA对比条 */
+  .benchmark-bar { height: 28px; }
+  .benchmark-labels { font-size: 0.65rem; }
+  
+  /* 历史记录 */
+  .history-item { padding: 12px; }
+  .history-score { font-size: 1.2rem; }
+  
+  /* 轮次信息表单 */
+  .card-title { font-size: 0.95rem; }
+}
+
+/* ========== Utilities ========== */
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+.text-center { text-align: center; }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.fw-600 { font-weight: 600; }
+.flex { display: flex; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.justify-between { justify-content: space-between; }
+.align-center { align-items: center; }
+
+/* ========== Score Colors ========== */
+.score-eagle { color: #1565C0; font-weight: 800; }
+.score-birdie { color: #2E7D32; font-weight: 700; }
+.score-par { color: #212121; }
+.score-bogey { color: #F57F17; font-weight: 600; }
+.score-double { color: #E65100; font-weight: 700; }
+.score-triple { color: #C62828; font-weight: 800; }
+
+/* ========== Animations ========== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.3s ease-out; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <h1>⛳ 高尔夫智能分析系统 <span style="font-size:0.8rem;opacity:0.75;">巧克力版</span></h1>
+  <p>数据驱动的高尔夫提升方案</p>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('input')">📝 录入</button>
+  <button class="tab-btn" onclick="switchTab('stats')">📊 本场统计</button>
+  <button class="tab-btn" onclick="switchTab('history')">📅 历史</button>
+  <button class="tab-btn" onclick="switchTab('analysis')">🤖 AI分析</button>
+</div>
+
+<!-- ==================== TAB 1: 数据录入 ==================== -->
+<div id="tab-input" class="tab-content active">
+
+  <!-- 轮次信息 -->
+  <div class="card fade-in">
+    <div class="card-title"><span class="icon">⚙️</span> 轮次信息</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label class="form-label">日期</label>
+        <input type="date" id="round-date" class="form-input" style="width:100%;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">球场名称</label>
+        <input type="text" id="course-name" class="form-input" placeholder="选填" style="width:100%;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">洞数</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" onclick="setHoles(18,this)">18洞</button>
+          <button class="toggle-btn" onclick="setHoles(9,this)">9洞</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">差点（选填）</label>
+        <input type="number" id="handicap" class="form-input" placeholder="你的差点指数" style="width:100%;">
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block mt-8" onclick="startRound()">开始录入</button>
+  </div>
+
+  <!-- 逐洞录入（开始后显示） -->
+  <div id="input-area" style="display:none;">
+    <!-- 逐洞录入 -->
+    <div class="card">
+      <div class="card-title"><span class="icon">⛳</span> 逐洞录入</div>
+      <div class="quick-entry-grid" id="hole-nav-grid"></div>
+      <button class="btn btn-accent btn-block mt-16" onclick="finishRound()">✅ 完成本轮录入</button>
+    </div>
+
+    <!-- 当前洞录入表单（Modal） -->
+    <div class="modal-overlay" id="hole-modal">
+      <div class="modal">
+        <h3 id="modal-title">第 1 洞录入</h3>
+        <div class="form-group">
+          <label class="form-label">标准杆</label>
+          <div class="toggle-group" id="par-group">
+            <button class="toggle-btn" onclick="setPar(3,this)">Par 3</button>
+            <button class="toggle-btn active" onclick="setPar(4,this)">Par 4</button>
+            <button class="toggle-btn" onclick="setPar(5,this)">Par 5</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">成绩（杆数）</label>
+          <input type="number" id="hole-score" class="form-input" min="1" max="20" value="4">
+        </div>
+        <div class="form-group">
+          <label class="form-label">开球方向</label>
+          <div class="toggle-group" id="fir-group">
+            <button class="toggle-btn" onclick="setFIR('hook',this)">↖️ 左曲</button>
+            <button class="toggle-btn active" onclick="setFIR('fairway',this)">✅ 上球道</button>
+            <button class="toggle-btn" onclick="setFIR('slice',this)">↗️ 右曲</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            是否标On（GIR）
+            <span class="tooltip-info" data-tip="GIR（Green In Regulation）：两杆之内把球打到果岭上（Par3一杆上果岭、Par4两杆、Par5三杆），表示开球铁杆精准。">?</span>
+          </label>
+          <div class="toggle-group" id="gir-group">
+            <button class="toggle-btn active" onclick="setGIR(true,this)">✅ 标On</button>
+            <button class="toggle-btn" onclick="setGIR(false,this)">❌ 未标On</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">果岭推杆数</label>
+          <input type="number" id="hole-putts" class="form-input" min="0" max="10" value="2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">罚杆数（OB/水/遗失球）</label>
+          <input type="number" id="hole-penalties" class="form-input" min="0" max="10" value="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">沙坑救球成功？（选填）</label>
+          <div class="toggle-group" id="sand-group">
+            <button class="toggle-btn" onclick="setSand(true,true,this)">尝试并成功</button>
+            <button class="toggle-btn" onclick="setSand(true,false,this)">尝试未成功</button>
+            <button class="toggle-btn active" onclick="setSand(false,false,this)">未进沙坑</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button class="btn btn-outline" style="flex:1;" onclick="closeHoleModal()">取消</button>
+          <button class="btn btn-primary" style="flex:1;" onclick="saveHole()">保存本洞</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 未开始时的提示 -->
+  <div id="input-placeholder" class="card text-center" style="padding:40px 20px;">
+    <div style="font-size:3rem;margin-bottom:12px;">🏌️</div>
+    <p style="color:var(--text-secondary);font-size:0.9rem;">设置轮次信息后开始录入数据</p>
+  </div>
+</div>
+
+<!-- ==================== TAB 2: 本场统计 ==================== -->
+<div id="tab-stats" class="tab-content">
+  <div id="stats-placeholder" class="card text-center" style="padding:40px 20px;">
+    <div style="font-size:3rem;margin-bottom:12px;">📊</div>
+    <p style="color:var(--text-secondary);font-size:0.9rem;">请先录入一轮数据</p>
+  </div>
+  <div id="stats-area" style="display:none;">
+    <!-- 成绩总览 -->
+    <div class="card fade-in">
+      <div class="card-title"><span class="icon">🏆</span> 成绩总览</div>
+      <div class="stats-grid" id="overview-stats"></div>
+    </div>
+
+    <!-- PGA四大指标 -->
+    <div class="card fade-in">
+      <div class="card-title"><span class="icon">📈</span> PGA四大核心指标</div>
+      <div id="pga-stats"></div>
+    </div>
+
+    <!-- 各洞成绩明细 -->
+    <div class="card fade-in">
+      <div class="card-title"><span class="icon">⛳</span> 各洞成绩明细</div>
+      <div class="hole-table-wrap">
+        <table class="hole-table" id="detail-table">
+          <thead>
+            <tr>
+          <th>洞</th>
+          <th>Par</th>
+          <th>杆数</th>
+          <th>开球方向</th>
+          <th>GIR</th>
+          <th>推杆</th>
+          <th>罚杆</th>
+            </tr>
+          </thead>
+          <tbody id="detail-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 各洞类型分析 -->
+    <div class="card fade-in">
+      <div class="card-title"><span class="icon">🎯</span> 各洞类型分析</div>
+      <div class="stats-grid" id="par-stats"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAB 3: 历史记录 ==================== -->
+<div id="tab-history" class="tab-content">
+  <div class="card fade-in">
+    <div class="card-title"><span class="icon">📅</span> 历史轮次</div>
+    <div id="history-list"></div>
+    <div id="history-empty" class="text-center" style="padding:30px;color:var(--text-secondary);">
+      暂无历史记录，快去录入第一场吧！
+    </div>
+  </div>
+
+  <!-- 历史趋势 -->
+  <div class="card fade-in" id="trend-card" style="display:none;">
+    <div class="card-title"><span class="icon">📉</span> 趋势分析</div>
+    <canvas id="trend-chart" height="250"></canvas>
+  </div>
+
+  <!-- 数据管理 -->
+  <div class="card fade-in">
+    <div class="card-title"><span class="icon">💾</span> 数据管理</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-outline btn-sm" onclick="exportData()">📤 导出数据</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('import-file').click()">📥 导入数据</button>
+      <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑️ 清空所有数据</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(this)">
+    <p style="font-size:0.75rem;color:var(--text-secondary);margin-top:10px;">导出为JSON文件，可在其他设备导入或作为备份</p>
+  </div>
+</div>
+
+<!-- ==================== TAB 4: AI 分析 ==================== -->
+<div id="tab-analysis" class="tab-content">
+  <div id="analysis-placeholder" class="card text-center" style="padding:40px 20px;">
+    <div style="font-size:3rem;margin-bottom:12px;">🤖</div>
+    <p style="color:var(--text-secondary);font-size:0.9rem;">请先录入至少一轮数据以生成AI分析</p>
+  </div>
+  <div id="analysis-area" style="display:none;">
+    <!-- 综合评分 -->
+    <div class="card fade-in">
+      <div class="card-title"><span class="icon">🎯</span> 综合评分</div>
+      <div id="overall-score"></div>
+    </div>
+
+    <!-- 优先级分析 -->
+    <div class="card fade-in">
+      <div class="card-title"><span class="icon">🔥</span> 优先改进方向</div>
+      <div id="priority-analysis"></div>
+    </div>
+
+    <!-- 各洞表现明细 -->
+    <div class="card fade-in" id="hole-perf-card">
+      <div class="card-title"><span class="icon">📋</span> 各洞表现明细</div>
+      <div id="hole-performance"></div>
+    </div>
+
+    <!-- 各指标详细分析 -->
+    <div class="card fade-in">
+      <div class="card-title"><span class="icon">🔍</span> 各项指标深度分析</div>
+      <div id="detailed-analysis"></div>
+    </div>
+
+    <!-- 练习计划建议 -->
+    <div class="card fade-in">
+      <div class="card-title"><span class="icon">📋</span> 本周练习计划建议</div>
+      <div id="practice-plan"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom padding -->
+<div style="height:20px;"></div>
+
+<!-- Copyright -->
+<div style="text-align:center;padding:20px 16px 30px;font-size:0.75rem;color:var(--text-secondary);line-height:1.8;">
+  <div style="margin-bottom:6px;">
+    <span style="color:var(--primary);font-weight:600;">高尔夫智能分析系统</span>
+  </div>
+  <div>© 2026 GolfSmart · Carlo & 巧克力 联合出品</div>
+  <div style="margin-top:4px;font-size:0.72rem;color:var(--text-secondary);">Carlo：一个想成为优秀HR-AI工程师的高尔夫爱好者</div>
+  <div style="margin-top:4px;font-size:0.72rem;color:var(--text-secondary);">巧克力：Carlo的AI伙伴，有点强迫症的代码洁癖患者</div>
+  <div style="margin-top:4px;">数据存储于本地设备，不上传任何信息</div>
+  <div style="margin-top:6px;color:var(--danger);font-weight:600;">仅供个人学习训练使用，禁止商业转载或改编</div>
+</div>
+
+<script>
+// ==================== 全局状态 ====================
+let state = {
+  currentRound: null,  // 当前录入的轮次
+  holes: [],            // 各洞数据
+  currentHole: 1,       // 当前正在录入的洞
+  totalHoles: 18,      // 总洞数
+  history: [],          // 历史轮次
+};
+
+// ==================== 初始化 ====================
+function init() {
+  // 设置今天日期
+  document.getElementById('round-date').value = new Date().toISOString().split('T')[0];
+  // 读取历史数据
+  loadHistory();
+  // 渲染历史列表
+  renderHistoryList();
+}
+
+// ==================== Tab 切换 ====================
+function switchTab(tabName) {
+  // 更新按钮状态
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
+  // 更新内容
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  document.getElementById('tab-' + tabName).classList.add('active');
+
+  // 如果切换到统计或分析tab，刷新数据
+  if (tabName === 'stats' && state.currentRound) renderStats();
+  if (tabName === 'analysis' && state.currentRound) renderAnalysis();
+  if (tabName === 'history') renderHistoryList();
+}
+
+// ==================== 轮次设置 ====================
+function setHoles(num, btn) {
+  state.totalHoles = num;
+  btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function startRound() {
+  const date = document.getElementById('round-date').value;
+  if (!date) {
+    alert('请先选择日期');
+    return;
+  }
+  const course = document.getElementById('course-name').value || '未命名球场';
+  const handicap = parseInt(document.getElementById('handicap').value) || null;
+
+  state.currentRound = { date, course, handicap, totalHoles: state.totalHoles };
+  state.holes = [];
+  state.currentHole = 1;
+
+  // 初始化各洞数据，使用标准球场Par分配（前9洞：4,4,3,4,4,5,4,3,4，后9类似）
+  const standardPar = [4,4,3,4,4,5,4,3,4, 4,4,3,4,4,5,4,3,4];
+  for (let i = 1; i <= state.totalHoles; i++) {
+    const defaultPar = standardPar[i-1] || 4;
+    state.holes.push({
+      hole: i,
+      par: defaultPar,
+      score: null,
+      fir: null,
+      gir: false,
+      putts: 0,
+      penalties: 0,
+      sandAttempt: false,
+      sandSuccess: false,
+      done: false,
+    });
+  }
+
+  // 显示录入区域，直接进入逐洞录入
+  document.getElementById('input-placeholder').style.display = 'none';
+  document.getElementById('input-area').style.display = 'block';
+  renderHoleNav();
+  // 自动弹出第一洞录入
+  setTimeout(() => openHoleModal(0), 300);
+}
+
+// ==================== 逐洞导航 ====================
+function renderHoleNav() {
+  const grid = document.getElementById('hole-nav-grid');
+  grid.innerHTML = '';
+  state.holes.forEach((h, idx) => {
+    const card = document.createElement('div');
+    card.className = 'quick-hole-card' + (h.done ? ' done' : '');
+    card.onclick = () => openHoleModal(idx);
+    const scoreDisplay = h.done ? h.score : '?';
+    const parDisplay = 'Par ' + h.par;
+    card.innerHTML = `
+      <div class="quick-hole-num">第 ${h.hole} 洞</div>
+      <div class="quick-hole-par">${parDisplay}</div>
+      <div style="font-size:1.3rem;font-weight:800;margin-top:4px;color:${getScoreColor(h.score, h.par)}">${scoreDisplay}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function getScoreColor(score, par) {
+  if (!score) return '#212121';
+  const diff = score - par;
+  if (diff <= -2) return '#1565C0';
+  if (diff === -1) return '#2E7D32';
+  if (diff === 0) return '#212121';
+  if (diff === 1) return '#F57F17';
+  if (diff === 2) return '#E65100';
+  return '#C62828';
+}
+
+// ==================== 洞录入弹窗 ====================
+let editingHoleIdx = 0;
+
+function openHoleModal(idx) {
+  editingHoleIdx = idx;
+  const h = state.holes[idx];
+  document.getElementById('modal-title').textContent = `第 ${h.hole} 洞录入（Par ${h.par}）`;
+
+  // 设置Par
+  setPar(h.par, document.querySelector(`#par-group .toggle-btn:nth-child(${h.par === 3 ? 1 : h.par === 4 ? 2 : 3})`));
+
+  // 设置成绩
+  document.getElementById('hole-score').value = h.score || h.par;
+
+  // 设置开球方向
+  const firVal = h.firDir || 'fairway';
+  const firBtns = document.querySelectorAll('#fir-group .toggle-btn');
+  firBtns.forEach(b => b.classList.remove('active'));
+  if (firVal === 'hook') firBtns[0].classList.add('active');
+  else if (firVal === 'fairway') firBtns[1].classList.add('active');
+  else firBtns[2].classList.add('active');
+  state.holes[editingHoleIdx].firDir = firVal;
+
+  // 设置GIR
+  if (h.gir) {
+    setGIR(true, document.querySelector('#gir-group .toggle-btn:nth-child(1)'));
+  } else {
+    setGIR(false, document.querySelector('#gir-group .toggle-btn:nth-child(2)'));
+  }
+
+  document.getElementById('hole-putts').value = h.putts || 2;
+  document.getElementById('hole-penalties').value = h.penalties || 0;
+
+  document.getElementById('hole-modal').classList.add('active');
+}
+
+function closeHoleModal() {
+  document.getElementById('hole-modal').classList.remove('active');
+}
+
+function setPar(val, btn) {
+  state.holes[editingHoleIdx].par = val;
+  btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // 更新弹窗标题
+  const h = state.holes[editingHoleIdx];
+  document.getElementById('modal-title').textContent = `第 ${h.hole} 洞录入（Par ${val}）`;
+  // Par3时自动设置FIR为不计
+  if (val === 3) {
+    setFIR(null, document.querySelector('#fir-group .toggle-btn:nth-child(3)'));
+  }
+}
+
+function setFIR(val, btn) {
+  state.holes[editingHoleIdx].fir = val;
+  state.holes[editingHoleIdx].firDir = val; // 记录方向
+  btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function getFIRDisplay(h) {
+  if (!h.done) return '—';
+  if (h.par === 3) return 'Par3(不计)';
+  if (h.firDir === 'hook') return '↖️ 左曲';
+  if (h.firDir === 'slice') return '↗️ 右曲';
+  return '✅ 上球道';
+}
+
+function setGIR(val, btn) {
+  state.holes[editingHoleIdx].gir = val;
+  btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function setSand(attempt, success, btn) {
+  state.holes[editingHoleIdx].sandAttempt = attempt;
+  state.holes[editingHoleIdx].sandSuccess = success;
+  btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function saveHole() {
+  const h = state.holes[editingHoleIdx];
+  h.score = parseInt(document.getElementById('hole-score').value);
+  h.putts = parseInt(document.getElementById('hole-putts').value);
+  h.penalties = parseInt(document.getElementById('hole-penalties').value);
+  h.done = true;
+
+  closeHoleModal();
+  renderHoleNav();
+  // 录完一洞只更新卡片，不自动弹下一洞
+  // 想修改哪洞就点哪洞的卡片
+}
+
+// ==================== 完成轮次 ====================
+function finishRound() {
+  // 检查是否所有洞都已完成
+  const undone = state.holes.filter(h => !h.done);
+  if (undone.length > 0) {
+    if (!confirm(`还有 ${undone.length} 个洞未录入，确定要完成本轮吗？`)) return;
+  }
+
+  // 保存轮次
+  const roundData = {
+    id: Date.now(),
+    date: state.currentRound.date,
+    course: state.currentRound.course,
+    handicap: state.currentRound.handicap,
+    totalHoles: state.totalHoles,
+    holes: JSON.parse(JSON.stringify(state.holes)),
+    // 计算汇总数据
+    ...calculateStats(state.holes),
+  };
+
+  state.history.unshift(roundData);
+  saveHistory();
+  state.currentRound = roundData;
+
+  // 隐藏输入区域，显示占位符
+  document.getElementById('input-area').style.display = 'none';
+  document.getElementById('input-placeholder').style.display = 'block';
+
+  alert('本轮数据已保存！');
+  switchTab('stats');
+}
+
+// ==================== 统计计算 ====================
+function calculateStats(holes) {
+  const doneHoles = holes.filter(h => h.done);
+  const totalScore = doneHoles.reduce((s, h) => s + h.score, 0);
+  const totalPar = doneHoles.reduce((s, h) => s + h.par, 0);
+
+  // FIR（开球方向，不含Par3）
+  const nonPar3 = doneHoles.filter(h => h.par !== 3);
+  const firMade = nonPar3.filter(h => h.firDir === 'fairway').length;
+  const firTotal = nonPar3.length;
+  const firPct = firTotal > 0 ? Math.round(firMade / firTotal * 100) : null;
+  const hookCount = nonPar3.filter(h => h.firDir === 'hook').length;
+  const sliceCount = nonPar3.filter(h => h.firDir === 'slice').length;
+  const hookPct = firTotal > 0 ? Math.round(hookCount / firTotal * 100) : null;
+  const slicePct = firTotal > 0 ? Math.round(sliceCount / firTotal * 100) : null;
+
+  // GIR
+  const girMade = doneHoles.filter(h => h.gir).length;
+  const girPct = Math.round(girMade / doneHoles.length * 100);
+
+  // 推杆
+  const totalPutts = doneHoles.reduce((s, h) => s + h.putts, 0);
+  const avgPutts = (totalPutts / doneHoles.length).toFixed(2);
+  const totalPuttsRound = totalPutts;
+
+  // 罚杆
+  const totalPenalties = doneHoles.reduce((s, h) => s + h.penalties, 0);
+
+  // Scrambling（未GIR后保Par+）
+  const nonGIR = doneHoles.filter(h => !h.gir);
+  const scrambleMade = nonGIR.filter(h => h.score - h.par <= 0).length;
+  const scramblePct = nonGIR.length > 0 ? Math.round(scrambleMade / nonGIR.length * 100) : null;
+
+  // 沙坑救球
+  const sandAttempts = doneHoles.filter(h => h.sandAttempt);
+  const sandMade = sandAttempts.filter(h => h.sandSuccess).length;
+  const sandPct = sandAttempts.length > 0 ? Math.round(sandMade / sandAttempts.length * 100) : null;
+
+  // 各洞类型分析
+  const par3 = doneHoles.filter(h => h.par === 3);
+  const par4 = doneHoles.filter(h => h.par === 4);
+  const par5 = doneHoles.filter(h => h.par === 5);
+
+  const avgPar3 = par3.length > 0 ? (par3.reduce((s, h) => s + h.score, 0) / par3.length).toFixed(2) : null;
+  const avgPar4 = par4.length > 0 ? (par4.reduce((s, h) => s + h.score, 0) / par4.length).toFixed(2) : null;
+  const avgPar5 = par5.length > 0 ? (par5.reduce((s, h) => s + h.score, 0) / par5.length).toFixed(2) : null;
+
+  // 大号洞（三柏忌及以上）
+  const bigNumbers = doneHoles.filter(h => h.score - h.par >= 3);
+  const bigNumberCount = bigNumbers.length;
+
+  // 小鸟及以上
+  const birdiesOrBetter = doneHoles.filter(h => h.score - h.par <= -1).length;
+
+  // 标准杆
+  const pars = doneHoles.filter(h => h.score === h.par).length;
+  const bogeys = doneHoles.filter(h => h.score - h.par === 1).length;
+  const doubleBogeys = doneHoles.filter(h => h.score - h.par === 2).length;
+
+  return {
+    totalScore, totalPar, firPct, hookPct, slicePct, girPct, avgPutts, totalPuttsRound,
+    totalPenalties, scramblePct, sandPct,
+    avgPar3, avgPar4, avgPar5,
+    bigNumberCount, birdiesOrBetter, pars, bogeys, doubleBogeys,
+    doneHolesCount: doneHoles.length,
+  };
+}
+
+// ==================== 渲染统计 ====================
+function renderStats() {
+  const r = state.currentRound;
+  if (!r || !r.totalScore) { // 还没有计算过stats
+    const stats = calculateStats(state.holes.filter(h => h.done));
+    Object.assign(r, stats);
+  }
+
+  document.getElementById('stats-placeholder').style.display = 'none';
+  document.getElementById('stats-area').style.display = 'block';
+
+  // 成绩总览
+  const overviewHtml = `
+    <div class="stat-item"><div class="stat-value">${r.totalScore}</div><div class="stat-label">总杆数</div></div>
+    <div class="stat-item"><div class="stat-value">${r.totalScore - r.totalPar >= 0 ? '+' : ''}${r.totalScore - r.totalPar}</div><div class="stat-label">与标准杆差</div></div>
+    <div class="stat-item"><div class="stat-value">${r.birdiesOrBetter || 0}</div><div class="stat-label">小鸟及以上</div></div>
+    <div class="stat-item"><div class="stat-value">${r.bigNumberCount || 0}</div><div class="stat-label">三柏忌+</div></div>
+  `;
+  document.getElementById('overview-stats').innerHTML = overviewHtml;
+
+  // PGA四大指标
+  renderPGAStats(r);
+
+  // 各洞成绩明细
+  renderDetailTable();
+
+  // 各洞类型
+  const parStatsHtml = `
+    <div class="stat-item"><div class="stat-value">${r.avgPar3 || '-'}</div><div class="stat-label">Par 3 平均</div></div>
+    <div class="stat-item"><div class="stat-value">${r.avgPar4 || '-'}</div><div class="stat-label">Par 4 平均</div></div>
+    <div class="stat-item"><div class="stat-value">${r.avgPar5 || '-'}</div><div class="stat-label">Par 5 平均</div></div>
+    <div class="stat-item"><div class="stat-value">${r.totalPuttsRound || 0}</div><div class="stat-label">总推杆数</div></div>
+  `;
+  document.getElementById('par-stats').innerHTML = parStatsHtml;
+}
+
+function renderPGAStats(r) {
+  const benchmarks = {
+    fir: { label: '球道命中率 (FIR)', value: r.firPct, pga: 58, scratch: 50, hcp20: 40, unit: '%' },
+    gir: { label: '标On率 (GIR)', value: r.girPct, pga: 65, scratch: 40, hcp20: 25, unit: '%' },
+    putts: { label: '平均推杆/洞', value: (r.avgPutts || 0), pga: 1.62, scratch: 1.75, hcp20: 2.0, unit: '', lowerBetter: true },
+    scramble: { label: '救球率 (Scrambling)', value: r.scramblePct, pga: 61, scratch: 35, hcp20: 18, unit: '%' },
+  };
+
+  // 开球方向分析（非Par3洞）
+  let dirHtml = '';
+  if (r.hookPct !== null || r.slicePct !== null) {
+    dirHtml = `
+      <div style="margin-top:20px;padding:12px;background:#FFF8E1;border-radius:8px;">
+        <div style="font-weight:600;font-size:0.85rem;margin-bottom:8px;">🏌️ 开球方向分析（非Par3洞）</div>
+        <div style="display:flex;gap:12px;font-size:0.82rem;">
+          <span>✅ 上球道：${r.firPct !== null ? r.firPct + '%' : '-'}</span>
+          ${r.hookPct !== null ? `<span style="color:#E65100;">↖️ 左曲：${r.hookPct}%</span>` : ''}
+          ${r.slicePct !== null ? `<span style="color:#1565C0;">↗️ 右曲：${r.slicePct}%</span>` : ''}
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:6px;">
+          提示：左曲/右曲比例过高说明开球方向控制需改进；建议结合挥杆视频分析
+        </div>
+      </div>
+    `;
+  }
+
+  let html = '';
+  Object.values(benchmarks).forEach(b => {
+    if (b.value === null || b.value === undefined) return;
+    const userVal = b.unit === '%' ? b.value : b.value;
+    const pct = b.lowerBetter
+      ? Math.min(100, Math.max(0, (b.pga / userVal) * 50))
+      : Math.min(100, Math.max(0, (userVal / (b.pga * 1.5)) * 100));
+
+    let color = 'var(--success)';
+    if (b.lowerBetter) {
+      if (userVal > (b.scratch + 0.3)) color = 'var(--danger)';
+      else if (userVal > b.pga) color = 'var(--warning)';
+    } else {
+      if (userVal < b.hcp20) color = 'var(--danger)';
+      else if (userVal < b.scratch) color = 'var(--warning)';
+    }
+
+    const displayVal = b.unit === '%' ? userVal + '%' : userVal;
+    html += `
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-weight:600;font-size:0.85rem;">${b.label}</span>
+          <span style="font-weight:800;color:${color};font-size:0.9rem;">${displayVal}</span>
+        </div>
+        <div class="benchmark-bar">
+          <div class="benchmark-fill" style="width:${Math.min(100, pct)}%;background:${color};"></div>
+        </div>
+        <div class="benchmark-labels">
+          <span>你: ${displayVal}</span>
+          <span>PGA: ${b.pga}${b.unit}</span>
+          <span>差点20: ${b.hcp20}${b.unit}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  // 罚杆统计
+  if (r.totalPenalties !== undefined) {
+    html += `
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-weight:600;font-size:0.85rem;">罚杆总数</span>
+          <span style="font-weight:800;color:${r.totalPenalties > 4 ? 'var(--danger)' : r.totalPenalties > 2 ? 'var(--warning)' : 'var(--success)'};font-size:0.9rem;">${r.totalPenalties}杆</span>
+        </div>
+        <div class="benchmark-labels">
+          <span>目标: ≤2罚杆/轮</span>
+        </div>
+      </div>
+    `;
+  }
+
+  html += dirHtml;
+  document.getElementById('pga-stats').innerHTML = html;
+}
+
+function renderDetailTable() {
+  const tbody = document.getElementById('detail-tbody');
+  tbody.innerHTML = '';
+  state.holes.filter(h => h.done).forEach(h => {
+    const tr = document.createElement('tr');
+    const scoreClass = getScoreColorClass(h.score, h.par);
+    const firDisplay = getFIRDisplay(h);
+    const girDisplay = h.gir ? '✅' : '❌';
+    tr.innerHTML = `
+      <td class="hole-num">${h.hole}</td>
+      <td>${h.par}</td>
+      <td class="${scoreClass}">${h.score}</td>
+      <td>${firDisplay}</td>
+      <td>${girDisplay}</td>
+      <td>${h.putts}</td>
+      <td>${h.penalties > 0 ? '<span style="color:var(--danger);font-weight:700;">' + h.penalties + '</span>' : h.penalties}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function getScoreColorClass(score, par) {
+  const diff = score - par;
+  if (diff <= -2) return 'score-eagle';
+  if (diff === -1) return 'score-birdie';
+  if (diff === 0) return 'score-par';
+  if (diff === 1) return 'score-bogey';
+  if (diff === 2) return 'score-double';
+  return 'score-triple';
+}
+
+// ==================== AI 分析引擎 ====================
+function renderAnalysis() {
+  const r = state.currentRound;
+  if (!r || r.totalScore === undefined) {
+    // 需要先计算
+    const stats = calculateStats(state.holes.filter(h => h.done));
+    Object.assign(r, stats);
+  }
+
+  document.getElementById('analysis-placeholder').style.display = 'none';
+  document.getElementById('analysis-area').style.display = 'block';
+
+  renderOverallScore(r);
+  renderPriorityAnalysis(r);
+  renderHolePerformance(r);
+  renderDetailedAnalysis(r);
+  renderPracticePlan(r);
+}
+
+function renderOverallScore(r) {
+  // 计算综合评分（0-100）
+  let score = 50; // 基础分
+
+  // FIR评分
+  if (r.firPct !== null) {
+    if (r.firPct >= 60) score += 10;
+    else if (r.firPct >= 45) score += 5;
+    else if (r.firPct < 30) score -= 10;
+  }
+
+  // GIR评分
+  if (r.girPct >= 60) score += 15;
+  else if (r.girPct >= 40) score += 8;
+  else if (r.girPct >= 25) score += 3;
+  else score -= 10;
+
+  // 推杆评分
+  if (r.avgPutts < 1.7) score += 10;
+  else if (r.avgPutts < 1.9) score += 5;
+  else if (r.avgPutts > 2.1) score -= 10;
+
+  // Scrambling评分
+  if (r.scramblePct !== null) {
+    if (r.scramblePct >= 50) score += 8;
+    else if (r.scramblePct >= 30) score += 4;
+    else score -= 5;
+  }
+
+  // 大号洞扣分
+  score -= r.bigNumberCount * 5;
+
+  // 罚杆扣分
+  score -= r.totalPenalties * 3;
+
+  score = Math.max(0, Math.min(100, score));
+
+  let level = '';
+  let levelColor = '';
+  if (score >= 80) { level = '优秀'; levelColor = 'var(--success)'; }
+  else if (score >= 60) { level = '良好'; levelColor = '#689F38'; }
+  else if (score >= 40) { level = '中等'; levelColor = 'var(--warning)'; }
+  else { level = '需大幅改进'; levelColor = 'var(--danger)'; }
+
+  document.getElementById('overall-score').innerHTML = `
+    <div style="text-align:center;padding:20px;">
+      <div style="font-size:4rem;font-weight:900;color:${levelColor};">${score}</div>
+      <div style="font-size:1.2rem;font-weight:700;color:${levelColor};margin-top:4px;">${level}</div>
+      <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:8px;">综合评分（基于PGA四大指标及失误分析）</div>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:#F5F5F5;border-radius:8px;font-size:0.82rem;color:var(--text-secondary);line-height:1.6;">
+      ${generateScoreExplanation(r, score)}
+    </div>
+  `;
+}
+
+function generateScoreExplanation(r, score) {
+  let parts = [];
+  if (r.firPct !== null) parts.push(`球道命中率${r.firPct}%`);
+  if (r.girPct !== undefined) parts.push(`标On率${r.girPct}%`);
+  if (r.avgPutts) parts.push(`平均推杆${r.avgPutts}`);
+  if (r.scramblePct !== null) parts.push(`救球率${r.scramblePct}%`);
+  parts.push(`大号洞${r.bigNumberCount}个`);
+  parts.push(`罚杆${r.totalPenalties}杆`);
+  return '本轮数据：' + parts.join('，') + '。';
+}
+
+function renderPriorityAnalysis(r) {
+  const analyses = [];
+
+  // 优先级1：大号洞
+  if (r.bigNumberCount >= 2) {
+    // 找出哪些洞是大号洞
+    const bigHoles = state.holes.filter(h => h.done && (h.score - h.par >= 3));
+    const bigHoleDesc = bigHoles.map(h => `第${h.hole}洞（Par${h.par}，打了${h.score}杆）`).join('、');
+    analyses.push({
+      priority: 1,
+      title: '消除大号洞（最高优先级）',
+      desc: `本轮出现了 ${r.bigNumberCount} 个大号洞（三柏忌及以上），这是拉高成绩的最大原因。研究显示，消除大号洞是降低差点的最有效方式，比提升任何单项技术都更有效。`,
+      detail: `大号洞明细：${bigHoleDesc}。这些洞往往是因为一个失误后心态崩溃，连续犯错导致。`,
+      tip: '练习建议：① 永远不要在一个洞放弃，大号洞往往是连续失误造成的 ② 当一洞已经失误，专注于"最好的柏忌/双柏忌"，不要继续强攻 ③ 练习Scrambling，提升未标On后的保Par能力',
+    });
+  }
+
+  // 优先级1：罚杆过多
+  if (r.totalPenalties >= 4) {
+    // 找出哪些洞有罚杆
+    const penaltyHoles = state.holes.filter(h => h.done && h.penalties > 0);
+    const penaltyDesc = penaltyHoles.map(h => `第${h.hole}洞（${h.penalties}杆罚杆）`).join('、');
+    analyses.push({
+      priority: 1,
+      title: '减少罚杆（最高优先级）',
+      desc: `本轮有 ${r.totalPenalties} 杆罚杆，相当于直接增加了 ${r.totalPenalties} 杆。罚杆是最"冤枉"的杆数损失。`,
+      detail: penaltyHoles.length > 0 ? `罚杆明细：${penaltyDesc}。` : '',
+      tip: '练习建议：① 开球优先使用3号木或铁木杆，确保球在球道上 ② 识别你的"危险洞"，在这些洞采取更保守的策略 ③  water hazard前不要强攻，选择安全的击球路线',
+    });
+  }
+
+  // 优先级2：Par 5策略
+  if (r.avgPar5 && r.avgPar5 > 6.0) {
+    analyses.push({
+      priority: 2,
+      title: '优化Par 5策略',
+      desc: `Par 5平均 ${r.avgPar5} 杆，还有改进空间。Par 5是最容易得分的洞，保守策略往往比强攻更有效。`,
+      tip: '练习建议：① 采用"3杆攻果岭"策略：前2杆把球放在安全位置，第3杆用你最有把握的球杆攻果岭 ② 只有当下条件有利时才尝试2杆On ③ 记住：Par 5的标准是5杆，博鹰球是小概率事件',
+    });
+  }
+
+  // 优先级2：推杆
+  if (r.avgPutts > 1.95 || r.totalPuttsRound > 34) {
+    analyses.push({
+      priority: 2,
+      title: '提升推杆效率',
+      desc: `平均推杆 ${r.avgPutts}/洞，总推杆 ${r.totalPuttsRound} 杆。推杆通常占全部杆数的40%以上，是提升空间最大的环节。`,
+      tip: '练习建议：① 每天练习3英尺推杆，直到"不可错过" ② 建立固定的推杆前例行动作 ③ 长距离推杆专注于距离控制（留在2推范围内） ④ 推荐阅读《Putting Out of Your Mind》by Dr. Bob Rotella',
+    });
+  }
+
+  // 优先级3：GIR
+  if (r.girPct < 35) {
+    analyses.push({
+      priority: 3,
+      title: '提升标On率',
+      desc: `标On率仅 ${r.girPct}%，这意味着大部分洞都需要靠短杆救球。提升铁杆精准度是关键。`,
+      tip: '练习建议：① 重点练习125-175码的距离控制 ② 使用体操圈或标志盘练习落点精度 ③ 检查手腕角度（击球时 Lead Wrist 应平坦或微曲）④ 每次练习记录 GIR%，追踪进步',
+    });
+  }
+
+  // 优先级3：Scrambling
+  if (r.scramblePct !== null && r.scramblePct < 25) {
+    analyses.push({
+      priority: 3,
+      title: '提升短杆救球能力',
+      desc: `救球率仅 ${r.scramblePct}%，未标On后很难保Par。短杆是区分好球手和优秀球手的关键。`,
+      tip: '练习建议：① 练习30-50码劈起球，目标是停在旗杆3米范围内 ② 沙坑球练习：先确保能稳定出沙，再追求近洞 ③ 练习不同草长的切杆 ④ 设定目标：先达到30%救球率，再向50%努力',
+    });
+  }
+
+  // FIR（低优先级，研究显示FIR与成绩相关性较低）
+  if (r.firPct !== null && r.firPct < 40) {
+    analyses.push({
+      priority: 3,
+      title: '注意开球方向性（但不用过度纠结球道命中率）',
+      desc: `球道命中率 ${r.firPct}%，但研究表明FIR与成绩的相关性不如GIR和推杆。更重要的是：你"在哪里"错过球道，以及是否避免了罚杆。`,
+      tip: '练习建议：① 不必强求每洞上球道，重点是避免右侧OB和左侧水障碍 ② 考虑在困难洞使用3号木开球 ③ 追踪你的"错过方向"，识别挥杆问题模式',
+    });
+  }
+
+  // 如果没有明显问题
+  if (analyses.length === 0) {
+    analyses.push({
+      priority: 3,
+      title: '本轮表现良好，继续巩固优势',
+      desc: `各项指标均在合理范围内，没有明显短板。此时应专注于精细化提升和稳定性训练。`,
+      tip: '练习建议：① 继续巩固推杆和短杆 ② 开始练习距离控制（Proximity to hole）③ 考虑引入Trackman或类似设备进行数据化训练 ④ 记录每次练习的数据，建立长期趋势',
+    });
+  }
+
+  let html = '';
+  analyses.forEach(a => {
+    html += `
+      <div class="analysis-card">
+        <h4><span class="priority-badge priority-${a.priority}">优先级 ${a.priority}</span>${a.title}</h4>
+        <p>${a.desc}</p>
+        ${a.detail ? `<p style="color:var(--danger);font-weight:600;margin-top:6px;">⚠️ ${a.detail}</p>` : ''}
+        <div class="practice-tip">💡 ${a.tip}</div>
+      </div>
+    `;
+  });
+
+  document.getElementById('priority-analysis').innerHTML = html;
+}
+
+// ==================== 各洞表现明细 ====================
+function renderHolePerformance(r) {
+  const card = document.getElementById('hole-perf-card');
+  const container = document.getElementById('hole-performance');
+
+  if (!r.holes || r.holes.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+
+  const doneHoles = r.holes.filter(h => h.done);
+  if (doneHoles.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-secondary);font-size:0.85rem;">暂无各洞成绩数据</p>';
+    return;
+  }
+
+  // 按表现分类
+  const eagles = doneHoles.filter(h => h.score - h.par <= -2);
+  const birdies = doneHoles.filter(h => h.score - h.par === -1);
+  const pars = doneHoles.filter(h => h.score - h.par === 0);
+  const bogeys = doneHoles.filter(h => h.score - h.par === 1);
+  const doubles = doneHoles.filter(h => h.score - h.par === 2);
+  const bigNums = doneHoles.filter(h => h.score - h.par >= 3);
+
+  function holeList(holes, color) {
+    if (holes.length === 0) return '';
+    const items = holes.map(h => `<span style="color:${color};font-weight:700;">第${h.hole}洞(${h.score}杆)</span>`).join('、');
+    return items;
+  }
+
+  let html = '<div style="font-size:0.85rem;line-height:2;">';
+
+  if (eagles.length > 0)
+    html += `<div>🦅 <strong>老鹰/信天翁：</strong>${holeList(eagles, '#1565C0')}</div>`;
+  if (birdies.length > 0)
+    html += `<div>🐦 <strong>小鸟：</strong>${holeList(birdies, '#2E7D32')}</div>`;
+  if (pars.length > 0)
+    html += `<div>⚪ <strong>帕：</strong>${holeList(pars, '#212121')}</div>`;
+  if (bogeys.length > 0)
+    html += `<div>🟡 <strong>柏忌：</strong>${holeList(bogeys, '#F57F17')}</div>`;
+  if (doubles.length > 0)
+    html += `<div>🟠 <strong>双柏忌：</strong>${holeList(doubles, '#E65100')}</div>`;
+  if (bigNums.length > 0)
+    html += `<div>🔴 <strong>三柏忌及以上（大号洞）：</strong>${holeList(bigNums, '#C62828')}</div>`;
+
+  html += '</div>';
+
+  // 添加一个简单的柱状图展示各洞成绩
+  html += `<div style="margin-top:16px;"><canvas id="hole-score-chart" height="200"></canvas></div>`;
+
+  container.innerHTML = html;
+
+  // 渲染各洞成绩柱状图
+  setTimeout(() => {
+    const canvas = document.getElementById('hole-score-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (window.__holeChart) window.__holeChart.destroy();
+
+    const labels = doneHoles.map(h => 'H' + h.hole);
+    const data = doneHoles.map(h => h.score - h.par);
+    const colors = data.map(d => {
+      if (d <= -2) return '#1565C0';
+      if (d === -1) return '#2E7D32';
+      if (d === 0) return '#9E9E9E';
+      if (d === 1) return '#F57F17';
+      if (d === 2) return '#E65100';
+      return '#C62828';
+    });
+
+    window.__holeChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: '与Par差值',
+          data: data,
+          backgroundColor: colors,
+          borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => {
+                const h = doneHoles[ctx.dataIndex];
+                return `第${h.hole}洞：Par${h.par}，打了${h.score}杆（${data[ctx.dataIndex] >=0 ? '+' : ''}${data[ctx.dataIndex]}）`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            title: { display: true, text: '与Par差值', font: { size: 11 } },
+            grid: { color: '#EEE' }
+          },
+          x: {
+            title: { display: true, text: '洞号', font: { size: 10 } },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }, 100);
+}
+
+function renderDetailedAnalysis(r) {
+  let html = '';
+
+  // FIR详细分析
+  if (r.firPct !== null) {
+    let assessment = '';
+    let detail = '';
+    if (r.firPct >= 60) { assessment = '优秀'; detail = '你的开球 accuracy 已经达到PGA巡回赛水平，继续保持！'; }
+    else if (r.firPct >= 45) { assessment = '良好'; detail = '开球accuracy处于中等偏上水平，继续巩固。'; }
+    else if (r.firPct >= 30) { assessment = '需改进'; detail = '开球accuracy偏低，建议检查挥杆路径和球杆选择。考虑在困难洞使用3号木。'; }
+    else { assessment = '急需改进'; detail = '开球accuracy严重偏低，这是成绩不好的主要原因之一。优先解决这个问题。'; }
+
+    html += `
+      <div class="analysis-card">
+        <h4>🏌️ 球道命中率 (FIR): ${r.firPct}% — ${assessment}</h4>
+        <p>${detail}</p>
+        <div class="benchmark-labels" style="margin-top:8px;">
+          <span>PGA巡回赛: 60%</span>
+          <span>差点10: 50%</span>
+          <span>差点20: 40%</span>
+          <span>你的: ${r.firPct}%</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // GIR详细分析
+  let girAssessment = '';
+  let girDetail = '';
+  if (r.girPct >= 60) { girAssessment = '优秀'; girDetail = '标On率达到巡回赛水平，你的铁杆非常精准。'; }
+  else if (r.girPct >= 40) { girAssessment = '良好'; girDetail = '标On率处于中等水平，继续提升铁杆精准度。'; }
+  else if (r.girPct >= 25) { girAssessment = '需改进'; girDetail = '标On率偏低，这是成绩提升的关键瓶颈。'; }
+  else { girAssessment = '急需改进'; girDetail = '标On率很低，几乎每洞都要靠短杆救球，这会极大增加杆数。'; }
+
+  html += `
+    <div class="analysis-card">
+      <h4>🎯 标On率 (GIR): ${r.girPct}% — ${girAssessment}</h4>
+      <p>${girDetail}</p>
+      <div class="benchmark-labels" style="margin-top:8px;">
+        <span>PGA巡回赛: 66%</span>
+        <span>差点10: 40%</span>
+        <span>差点20: 25%</span>
+        <span>你的: ${r.girPct}%</span>
+      </div>
+    </div>
+  `;
+
+  // 推杆详细分析
+  let puttAssessment = '';
+  let puttDetail = '';
+  if (r.avgPutts < 1.7) { puttAssessment = '优秀'; puttDetail = '推杆效率极高，已经达到职业水平。'; }
+  else if (r.avgPutts < 1.9) { puttAssessment = '良好'; puttDetail = '推杆效率不错，继续巩固短推。'; }
+  else if (r.avgPutts < 2.1) { puttAssessment = '需改进'; puttDetail = '推杆有提升空间，重点是短推成功率和长推距离控制。'; }
+  else { puttAssessment = '急需改进'; puttDetail = '推杆是明显的短板，每轮可能因为推杆多损失3-5杆。'; }
+
+  html += `
+    <div class="analysis-card">
+      <h4>🎱 推杆效率: ${r.avgPutts}/洞 — ${puttAssessment}</h4>
+      <p>${puttDetail}</p>
+      <div class="benchmark-labels" style="margin-top:8px;">
+        <span>PGA巡回赛: 1.62/洞</span>
+        <span>差点10: 1.85/洞</span>
+        <span>差点20: 2.0/洞</span>
+        <span>你的: ${r.avgPutts}/洞</span>
+      </div>
+    </div>
+  `;
+
+  // Scrambling详细分析
+  if (r.scramblePct !== null) {
+    let scAssessment = '';
+    let scDetail = '';
+    if (r.scramblePct >= 50) { scAssessment = '优秀'; scDetail = '短杆救球能力很强，这是低差点的关键特征。'; }
+    else if (r.scramblePct >= 30) { scAssessment = '良好'; scDetail = '救球能力中等，继续提升短杆精度。'; }
+    else { scAssessment = '需改进'; scDetail = '救球率偏低，未标On后很难保Par，短杆需要大量练习。'; }
+
+    html += `
+      <div class="analysis-card">
+        <h4>🏖️ 救球率 (Scrambling): ${r.scramblePct}% — ${scAssessment}</h4>
+        <p>${scDetail}</p>
+        <div class="benchmark-labels" style="margin-top:8px;">
+          <span>PGA巡回赛: 58%</span>
+          <span>差点10: 35%</span>
+          <span>差点20: 18%</span>
+          <span>你的: ${r.scramblePct}%</span>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('detailed-analysis').innerHTML = html;
+}
+
+function renderPracticePlan(r) {
+  const plans = [];
+
+  // 根据最严重的问题生成练习计划
+  if (r.bigNumberCount >= 2 || r.totalPenalties >= 3) {
+    plans.push({
+      focus: '消除大号洞 & 减少罚杆',
+      drills: [
+        '每次练习结束时，模拟"压力情况"：假设你已经在某洞打了+3，练习如何在下一洞"止损"',
+        '在练习场练习"安全击球"：用7号铁代替Driver，感受控球 vs 距离的权衡',
+        '沙坑救球练习：确保能从沙坑稳定逃脱（这是避免大号洞的关键）',
+      ]
+    });
+  }
+
+  if (r.avgPutts > 1.9 || r.totalPuttsRound > 32) {
+    plans.push({
+      focus: '推杆专项（每周至少2次）',
+      drills: [
+        '3英尺推杆挑战：连续命中20个3英尺推杆才能结束练习',
+        '距离控制练习：从20、30、40英尺推球，目标是停在旗杆1.5米内',
+        '压力推杆：模拟第18洞需要推进才能"赢"的情况',
+      ]
+    });
+  }
+
+  if (r.girPct < 40) {
+    plans.push({
+      focus: '铁杆精准度（每周2-3次）',
+      drills: [
+        '目标练习：在果岭上放体操圈，从100码外攻击，记录命中率',
+        '距离控制：用同一支铁杆打10球，记录落点分布，目标是缩小散布范围',
+        '如果你有HackMotion等手腕角度传感器，检查击球时手腕是否平坦/微曲',
+      ]
+    });
+  }
+
+  if (r.scramblePct === null || r.scramblePct < 30) {
+    plans.push({
+      focus: '短杆/切杆（每次练习必做）',
+      drills: [
+        '30-50码劈起球：目标是停在旗杆3米内，做10次，记录成功次数',
+        '沙坑球：从沙坑击球上果岭，目标是停在旗杆2米内',
+        '不同草长切杆：练习从长草、短草、硬地切球的不同技巧',
+      ]
+    });
+  }
+
+  // 默认计划
+  if (plans.length === 0) {
+    plans.push({
+      focus: '巩固与精细化提升',
+      drills: [
+        '继续当前的练习节奏，保持推杆和短杆的训练频率',
+        '开始追踪"Proximity to Hole"数据，目标是缩短平均距离',
+        '考虑录下挥杆视频，用慢动作分析检查关键位置',
+      ]
+    });
+  }
+
+  let html = '';
+  plans.forEach((p, idx) => {
+    html += `
+      <div class="analysis-card">
+        <h4>📌 练习重点 ${idx + 1}：${p.focus}</h4>
+        <ul style="margin:8px 0 0 20px;font-size:0.85rem;color:var(--text-secondary);line-height:2;">
+          ${p.drills.map(d => '<li>' + d + '</li>').join('')}
+        </ul>
+      </div>
+    `;
+  });
+
+  html += `
+    <div style="margin-top:16px;padding:12px;background:#E3F2FD;border-radius:8px;font-size:0.82rem;color:#1565C0;line-height:1.6;">
+      💡 <strong>提示：</strong>每周练习3-4次，每次60-90分钟，比每周练习1次但练4小时更有效。保持频率，追踪数据，你会看到进步！
+    </div>
+  `;
+
+  document.getElementById('practice-plan').innerHTML = html;
+}
+
+// ==================== 历史记录 ====================
+function loadHistory() {
+  try {
+    const data = localStorage.getItem('golf-history');
+    if (data) state.history = JSON.parse(data);
+  } catch(e) { state.history = []; }
+}
+
+function saveHistory() {
+  try {
+    localStorage.setItem('golf-history', JSON.stringify(state.history));
+  } catch(e) { console.error('保存失败', e); }
+}
+
+function renderHistoryList() {
+  const list = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  const trendCard = document.getElementById('trend-card');
+
+  if (state.history.length === 0) {
+    empty.style.display = 'block';
+    trendCard.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  list.innerHTML = '';
+
+  state.history.forEach((r, idx) => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    const dateStr = new Date(r.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', weekday: 'short' });
+    item.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1;" onclick="viewHistoryRound(${idx})">
+          <div class="history-date">${dateStr}</div>
+          <div class="history-meta">${r.course} · ${r.totalHoles}洞</div>
+          ${r.firPct !== null ? `<div class="history-meta">FIR ${r.firPct}% · GIR ${r.girPct}% · 推杆 ${r.avgPutts}/洞</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editHistoryHole(${idx})" title="编辑成绩">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteHistoryRound(${idx})" title="删除本轮">🗑️</button>
+          <div class="history-score">${r.totalScore || '?'}</div>
+        </div>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+
+  // 渲染趋势图
+  renderTrendChart();
+}
+
+function deleteHistoryRound(idx) {
+  if (!confirm('确定要删除这一轮记录吗？删除后无法恢复。')) return;
+  state.history.splice(idx, 1);
+  saveHistory();
+  renderHistoryList();
+  // 如果当前在看这轮，清空统计区
+  if (state.currentRound && state.currentRound.id === (state.history[idx] ? state.history[idx].id : null)) {
+    document.getElementById('stats-area').style.display = 'none';
+    document.getElementById('stats-placeholder').style.display = 'block';
+  }
+}
+
+function viewHistoryRound(idx) {
+  const r = state.history[idx];
+  state.currentRound = r;
+  // 深拷贝 holes，避免修改历史数据
+  state.holes = r.holes ? JSON.parse(JSON.stringify(r.holes)) : [];
+  state.totalHoles = r.totalHoles || r.holes.length || 18;
+
+  // 切换到统计tab并更新按钮状态
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-btn')[1].classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  document.getElementById('tab-stats').classList.add('active');
+  renderStats();
+}
+
+let editingHistoryIdx = -1;
+
+function editHistoryHole(idx) {
+  editingHistoryIdx = idx;
+  const r = state.history[idx];
+  state.currentRound = r;
+  state.holes = r.holes ? JSON.parse(JSON.stringify(r.holes)) : [];
+  state.totalHoles = r.totalHoles || r.holes.length || 18;
+
+  // 创建编辑弹窗内容
+  const modal = document.getElementById('hole-modal');
+  document.getElementById('modal-title').textContent = '编辑历史成绩';
+  document.getElementById('hole-modal').classList.add('active');
+
+  // 更新par-group隐藏，用下拉框
+  document.querySelector('.modal').innerHTML = `
+    <h3 id="modal-title">编辑历史成绩 - ${r.course || '未命名'}</h3>
+    <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;">选择要编辑的洞：</p>
+    <div id="edit-hole-list" style="max-height:60vh;overflow-y:auto;"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-outline" style="flex:1;" onclick="closeHistoryEditModal()">取消</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="saveHistoryEdit()">保存修改</button>
+    </div>
+  `;
+
+  renderEditHoleList();
+}
+
+function renderEditHoleList() {
+  const list = document.getElementById('edit-hole-list');
+  if (!list) return;
+  list.innerHTML = '';
+  state.holes.forEach((h, idx) => {
+    const item = document.createElement('div');
+    item.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--border);';
+    item.innerHTML = `
+      <span style="font-weight:700;min-width:60px;color:var(--primary);">第${h.hole}洞</span>
+      <span style="font-size:0.8rem;color:var(--text-secondary);">Par ${h.par}</span>
+      <select class="form-select" id="edit-par-${idx}" style="width:60px;padding:6px;" onchange="updateEditHolePar(${idx}, this.value)">
+        <option value="3" ${h.par===3?'selected':''}>Par3</option>
+        <option value="4" ${h.par===4?'selected':''}>Par4</option>
+        <option value="5" ${h.par===5?'selected':''}>Par5</option>
+      </select>
+      <input type="number" id="edit-score-${idx}" value="${h.score || h.par}" min="1" max="20" class="form-input" style="width:60px;padding:6px;" onchange="updateEditHoleScore(${idx}, this.value)">
+      <span style="font-size:0.75rem;color:var(--text-secondary);">杆</span>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function updateEditHolePar(idx, val) {
+  state.holes[idx].par = parseInt(val);
+}
+
+function updateEditHoleScore(idx, val) {
+  state.holes[idx].score = parseInt(val);
+}
+
+function closeHistoryEditModal() {
+  document.getElementById('hole-modal').classList.remove('active');
+  // 恢复原始弹窗结构
+  document.querySelector('.modal').innerHTML = `
+    <h3 id="modal-title">第 1 洞录入</h3>
+    <div class="form-group">
+      <label class="form-label">标准杆</label>
+      <div class="toggle-group" id="par-group">
+        <button class="toggle-btn" onclick="setPar(3,this)">Par 3</button>
+        <button class="toggle-btn active" onclick="setPar(4,this)">Par 4</button>
+        <button class="toggle-btn" onclick="setPar(5,this)">Par 5</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">成绩（杆数）</label>
+      <input type="number" id="hole-score" class="form-input" min="1" max="20" value="4">
+    </div>
+    <div class="form-group">
+      <label class="form-label">
+        开球方向
+      </label>
+      <div class="toggle-group" id="fir-group">
+        <button class="toggle-btn" onclick="setFIR('hook',this)">↖️ 左曲</button>
+        <button class="toggle-btn active" onclick="setFIR('fairway',this)">✅ 上球道</button>
+        <button class="toggle-btn" onclick="setFIR('slice',this)">↗️ 右曲</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">
+        是否标On（GIR）
+        <span class="tooltip-info" data-tip="GIR（Green In Regulation）：两杆之内把球打到果岭上（Par3一杆上果岭、Par4两杆、Par5三杆），表示开球铁杆精准。">?</span>
+      </label>
+      <div class="toggle-group" id="gir-group">
+        <button class="toggle-btn active" onclick="setGIR(true,this)">✅ 标On</button>
+        <button class="toggle-btn" onclick="setGIR(false,this)">❌ 未标On</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">推杆数</label>
+      <input type="number" id="hole-putts" class="form-input" min="0" max="10" value="2">
+    </div>
+    <div class="form-group">
+      <label class="form-label">罚杆数</label>
+      <input type="number" id="hole-penalties" class="form-input" min="0" max="10" value="0">
+    </div>
+    <div class="form-group">
+      <label class="form-label">沙坑（Par5可选）</label>
+      <div class="toggle-group" id="sand-group">
+        <button class="toggle-btn" onclick="setSand(true,true,this)">尝试并成功</button>
+        <button class="toggle-btn" onclick="setSand(true,false,this)">尝试未成功</button>
+        <button class="toggle-btn active" onclick="setSand(false,false,this)">未进沙坑</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-outline" style="flex:1;" onclick="closeHoleModal()">取消</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="saveHole()">保存本洞</button>
+    </div>
+  `;
+}
+
+function saveHistoryEdit() {
+  if (editingHistoryIdx < 0) return;
+
+  // 重新计算统计
+  const stats = calculateStats(state.holes);
+  state.history[editingHistoryIdx] = {
+    ...state.history[editingHistoryIdx],
+    holes: JSON.parse(JSON.stringify(state.holes)),
+    ...stats
+  };
+
+  saveHistory();
+  renderHistoryList();
+  closeHistoryEditModal();
+
+  // 如果当前在查看这轮，更新显示
+  if (state.currentRound && state.currentRound.id === state.history[editingHistoryIdx]?.id) {
+    state.currentRound = state.history[editingHistoryIdx];
+    renderStats();
+  }
+
+  alert('成绩已更新！');
+}
+
+// ==================== 数据导出/导入 ====================
+function exportData() {
+  if (state.history.length === 0) {
+    alert('暂无数据可导出');
+    return;
+  }
+  const data = {
+    version: '1.0',
+    exportDate: new Date().toISOString(),
+    rounds: state.history
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `golf-stats-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.rounds || !Array.isArray(data.rounds)) {
+        throw new Error('文件格式错误');
+      }
+      if (confirm(`确定导入 ${data.rounds.length} 轮数据？这将覆盖现有数据。`)) {
+        state.history = data.rounds;
+        saveHistory();
+        renderHistoryList();
+        alert('导入成功！');
+      }
+    } catch (err) {
+      alert('导入失败：' + err.message);
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function clearAllData() {
+  if (confirm('⚠️ 确定要清空所有数据吗？此操作不可恢复！')) {
+    if (confirm('再次确认：你真的要删除所有历史记录吗？')) {
+      state.history = [];
+      saveHistory();
+      renderHistoryList();
+      alert('所有数据已清空');
+    }
+  }
+}
+
+function renderTrendChart() {
+  const trendCard = document.getElementById('trend-card');
+  if (state.history.length < 2) {
+    trendCard.style.display = 'none';
+    return;
+  }
+
+  trendCard.style.display = 'block';
+
+  const recent = state.history.slice(0, 10).reverse();
+  const labels = recent.map(r => {
+    const d = new Date(r.date);
+    return (d.getMonth() + 1) + '/' + d.getDate();
+  });
+  const scores = recent.map(r => r.totalScore);
+  const girs = recent.map(r => r.girPct);
+  const putts = recent.map(r => parseFloat(r.avgPutts));
+
+  const ctx = document.getElementById('trend-chart').getContext('2d');
+
+  // 销毁已有图表
+  if (window.__trendChart) window.__trendChart.destroy();
+
+  window.__trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: '总杆数',
+          data: scores,
+          borderColor: '#C62828',
+          backgroundColor: 'rgba(198,40,40,0.1)',
+          borderWidth: 3,
+          pointRadius: 5,
+          pointBackgroundColor: '#C62828',
+          tension: 0.3,
+          yAxisID: 'y',
+        },
+        {
+          label: 'GIR%',
+          data: girs,
+          borderColor: '#2E7D32',
+          backgroundColor: 'rgba(46,125,50,0.1)',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#2E7D32',
+          tension: 0.3,
+          yAxisID: 'y1',
+        },
+        {
+          label: '平均推杆/洞',
+          data: putts,
+          borderColor: '#1565C0',
+          backgroundColor: 'rgba(21,101,192,0.08)',
+          borderWidth: 2,
+          pointRadius: 4,
+          pointBackgroundColor: '#1565C0',
+          tension: 0.3,
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: { display: true, text: '最近10轮趋势', font: { size: 14 }, color: '#212121' },
+        legend: { position: 'bottom', labels: { font: { size: 12 } } }
+      },
+      scales: {
+        y: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          title: { display: true, text: '总杆数', font: { size: 11 } },
+          grid: { color: '#EEEEEE' }
+        },
+        y1: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          title: { display: true, text: 'GIR% / 推杆', font: { size: 11 } },
+          min: 0,
+          max: 100,
+          grid: { drawOnChartArea: false },
+        }
+      }
+    }
+  });
+}
+
+// ==================== 启动 ====================
+init();
+</script>
+
+</body>
+</html>
