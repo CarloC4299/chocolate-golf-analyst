@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>高尔夫智能分析系统 - 巧克力（个人版）</title>
+<title>高尔夫智能分析系统 - 个人版</title>
 <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.7/chart.umd.min.js"></script>
 <style>
 /* ========== CSS Reset & Base ========== */
@@ -1770,14 +1770,14 @@ function renderPracticePlan(r) {
 // ==================== 历史记录 ====================
 function loadHistory() {
   try {
-    const data = localStorage.getItem('golf-history');
+    const data = localStorage.getItem('golf-history-personal');
     if (data) state.history = JSON.parse(data);
   } catch(e) { state.history = []; }
 }
 
 function saveHistory() {
   try {
-    localStorage.setItem('golf-history', JSON.stringify(state.history));
+    localStorage.setItem('golf-history-personal', JSON.stringify(state.history));
   } catch(e) { console.error('保存失败', e); }
 }
 
