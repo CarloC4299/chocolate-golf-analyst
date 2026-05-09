@@ -86,40 +86,6 @@ https://carloc4299.github.io/chocolate-golf-analyst/personal.html
   2. 宽度设为 `90%`，加 `box-sizing: border-box`
   3. 卡片加 `overflow: hidden` 兜底
 
----
-
-## 🚀 本地开发
-
-### 环境要求
-- Git
-- 浏览器（推荐 Chrome 或 Safari）
-- （可选）本地 Web 服务器（如 `python3 -m http.server`）
-
-### 克隆项目
-```bash
-git clone git@github.com:CarloC4299/chocolate-golf-analyst.git
-cd chocolate-golf-analyst
-```
-
-### 本地预览
-```bash
-# 方法1：直接用浏览器打开
-open Index.html
-
-# 方法2：启动本地服务器
-python3 -m http.server 8000
-# 然后访问 http://localhost:8000/Index.html
-```
-
-### 提交改动
-```bash
-git add .
-git commit -m "描述你的改动"
-git push origin main
-```
-
----
-
 ## 📝 版本历史
 
 | 版本 | 日期 | 说明 |
