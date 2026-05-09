@@ -423,6 +423,18 @@ body {
   border-color: var(--primary);
 }
 
+/* ========== Input Grid (Responsive) ========== */
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 481px) {
+  .input-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* ========== Toggle Switch ========== */
 .toggle-group {
   display: flex;
@@ -585,7 +597,7 @@ body {
   <!-- 轮次信息 -->
   <div class="card fade-in">
     <div class="card-title"><span class="icon">⚙️</span> 轮次信息</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div class="input-grid">
       <div class="form-group">
         <label class="form-label">日期</label>
         <input type="date" id="round-date" class="form-input" style="width:100%;">
