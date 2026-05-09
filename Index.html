@@ -435,10 +435,11 @@ input[type="date"] {
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
+  overflow-x: hidden;
 }
 @media (min-width: 481px) {
   .input-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
