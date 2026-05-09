@@ -1747,14 +1747,14 @@ function renderPracticePlan(r) {
 // ==================== 历史记录 ====================
 function loadHistory() {
   try {
-    const data = localStorage.getItem('golf-history');
+    const data = localStorage.getItem('golf-history-random');
     if (data) state.history = JSON.parse(data);
   } catch(e) { state.history = []; }
 }
 
 function saveHistory() {
   try {
-    localStorage.setItem('golf-history', JSON.stringify(state.history));
+    localStorage.setItem('golf-history-random', JSON.stringify(state.history));
   } catch(e) { console.error('保存失败', e); }
 }
 
@@ -2118,6 +2118,6 @@ function renderTrendChart() {
 // ==================== 启动 ====================
 init();
 </script>
-
+<script>localStorage.removeItem('golf-history-random');</script>
 </body>
 </html>
