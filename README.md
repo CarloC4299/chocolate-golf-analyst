@@ -20,10 +20,12 @@
 
 | 文件 | 用途 | 适用人群 | 数据存储 |
 |------|------|----------|----------|
-| `Index.html` | 外发版 | 发给别人用 | 独立 localStorage |
-| `personal.html` | 个人版 | 自己用 | 独立 localStorage |
+| `Index.html` | **外发版（推荐使用）** | 普通用户/他人 | 独立 localStorage |
+| `personal.html` | **个人版（作者专用）** | 仅限作者 Carlo 本人 | 独立 localStorage |
 
 **⚠️ 重要说明**：
+- `personal.html` 是**作者本人自用版本**，其他用户请勿使用
+- 他人请使用 `Index.html`（外发版）
 - 两个版本使用不同的 localStorage key，数据完全隔离
 - 别人看不到你的历史成绩，你也看不到别人的
 - 每个版本的历史记录都会保留
@@ -32,11 +34,13 @@
 
 ## 🔗 访问链接
 
-- **外发版**（发给别人）：  
-  https://carloc4299.github.io/chocolate-golf-analyst/Index.html
+**🔹 他人/普通用户请使用外发版**：  
+https://carloc4299.github.io/chocolate-golf-analyst/Index.html
 
-- **个人版**（自己用）：  
-  https://carloc4299.github.io/chocolate-golf-analyst/personal.html
+**🔸 个人版（仅作者 Carlo 本人使用）**：  
+https://carloc4299.github.io/chocolate-golf-analyst/personal.html
+
+> ⚠️ **注意**：`personal.html` 是作者自用版本，其他用户请使用上方的外发版链接。
 
 ---
 
