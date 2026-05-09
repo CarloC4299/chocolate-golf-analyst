@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>高尔夫智能分析系统 - 巧克力</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>高尔夫智能分析系统 - 巧克力（个人版）</title>
 <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.7/chart.umd.min.js"></script>
 <style>
 /* ========== CSS Reset & Base ========== */
@@ -88,6 +88,7 @@ body {
   box-shadow: var(--shadow);
   padding: 16px;
   margin-bottom: 16px;
+  overflow: hidden;
 }
 .card-title {
   font-size: 1rem;
@@ -402,7 +403,7 @@ body {
 .modal h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: var(--primary); }
 
 /* ========== Form Elements ========== */
-.form-group { margin-bottom: 14px; }
+.form-group { margin-bottom: 14px; min-width: 0; }
 .form-label {
   display: block;
   font-size: 0.82rem;
@@ -417,10 +418,32 @@ body {
   border-radius: 8px;
   font-size: 0.9rem;
   background: white;
+  box-sizing: border-box;
 }
 .form-select:focus, .form-input:focus {
   outline: none;
   border-color: var(--primary);
+}
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 8px;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+}
+
+/* ========== Input Grid (Responsive) ========== */
+.input-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  overflow-x: hidden;
+}
+@media (min-width: 481px) {
+  .input-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
 }
 
 /* ========== Toggle Switch ========== */
@@ -584,15 +607,15 @@ body {
 
   <!-- 轮次信息 -->
   <div class="card fade-in">
-    <div class="card-title"><span class="icon">⚙️</span> 轮次信息</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div class="form-group">
-        <label class="form-label">日期</label>
-        <input type="date" id="round-date" class="form-input" style="width:100%;">
-      </div>
+    <div class="card-title"><span class="icon">⚙️</span> 轮次信息 <span style="font-size:0.7rem;color:#999;margin-left:8px;">v1.3</span></div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label class="form-label">日期</label>
+      <input type="date" id="round-date" class="form-input" style="width:90%;box-sizing:border-box;">
+    </div>
+    <div class="input-grid">
       <div class="form-group">
         <label class="form-label">球场名称</label>
-        <input type="text" id="course-name" class="form-input" placeholder="选填" style="width:100%;">
+        <input type="text" id="course-name" class="form-input" placeholder="选填" style="width:100%;box-sizing:border-box;">
       </div>
       <div class="form-group">
         <label class="form-label">洞数</label>
@@ -2118,6 +2141,5 @@ function renderTrendChart() {
 // ==================== 启动 ====================
 init();
 </script>
-
 </body>
 </html>
